@@ -1,0 +1,36 @@
+# 编译产物
+build/
+Debug/
+Release/
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.su
+
+# IDE
+.metadata/
+.settings/
+*.launch
+*.uvguix.*
+.vscode/
+.idea/
+
+# 模型与大文件（保留目录占位）
+models/*
+!models/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+
+# 系统
+.DS_Store
+Thumbs.db
