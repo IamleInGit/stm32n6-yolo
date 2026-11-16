@@ -78,10 +78,13 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--size", type=int, default=224)
     ap.add_argument("--limit", type=int, default=None, help="只用前 N 张校准")
+    ap.add_argument("--calib", default="minmax", choices=("minmax", "percentile", "entropy"),
+                    help="校准方法；minmax 对离群值最敏感")
     args = ap.parse_args()
 
     import onnx
-    from onnxruntime.quantization import QuantFormat, QuantType, quantize_static
+    from onnxruntime.quantization import (CalibrationMethod, QuantFormat, QuantType,
+                                          quantize_static)
 
     model_path = Path(args.model)
     out_path = Path(args.out) if args.out else model_path.with_name(model_path.stem + "_int8.onnx")
@@ -106,7 +109,11 @@ def main():
         per_channel=True,                 # 对齐 ST modelzoo 的 granularity: per_channel
         activation_type=QuantType.QUInt8,  # 激活用 uint8
         weight_type=QuantType.QInt8,       # 权重用 int8
-        optimize_model=True,
+        calibrate_method={
+            "minmax": CalibrationMethod.MinMax,
+            "percentile": CalibrationMethod.Percentile,
+            "entropy": CalibrationMethod.Entropy,
+        }[args.calib],
     )
 
     src_mb = model_path.stat().st_size / 1024 / 1024
@@ -114,13 +121,16 @@ def main():
     print(f"\n输出      : {out_path}")
     print(f"体积      : {src_mb:.2f} MB → {dst_mb:.2f} MB（压缩到 {dst_mb / src_mb * 100:.1f}%）")
 
-    # 统计有多少算子仍留在 float（这些是量化没覆盖到的）
+    # 统计图结构。注意：QDQ 格式下 Conv 节点仍叫 "Conv"，
+    # 只是它的输入来自 DequantizeLinear、输出接 QuantizeLinear，
+    # 所以**不能**按 op_type 统计"还有多少 Conv 没量化"——那是错的指标。
     q = onnx.load(str(out_path))
     ops = [n.op_type for n in q.graph.node]
-    fp = sum(1 for o in ops if o in ("Conv", "MatMul", "Gemm"))
     qdq = sum(1 for o in ops if o in ("QuantizeLinear", "DequantizeLinear"))
-    print(f"节点      : {len(ops)}（Q/DQ 节点 {qdq} 个）")
-    print(f"仍为 float 的主算子: {fp} 个 Conv/MatMul")
+    conv_integer = sum(1 for o in ops if o == "ConvInteger")
+    print(f"节点      : {len(ops)}（Q/DQ 节点 {qdq} 个，ConvInteger {conv_integer} 个）")
+    print("说明      : QDQ 模式下 Conv 仍是 float 节点，整数路径由 Q/DQ 包裹实现；")
+    print("            真实推理是否全程 int8，要看 STEdgeAI 的报告，不能数节点数。")
     return 0
 
 
