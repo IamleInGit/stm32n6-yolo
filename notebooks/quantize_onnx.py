@@ -82,8 +82,11 @@ def main():
                     help="校准方法；minmax 对离群值最敏感")
     ap.add_argument("--act", default="quint8", choices=("quint8", "qint8"),
                     help="激活量化类型；YOLO 检测头对 uint8 激活较敏感")
-    ap.add_argument("--exclude-head", action="store_true",
-                    help="把检测头（默认 /model.22 前缀）排除在量化之外，留在 float")
+    ap.add_argument("--exclude-head", nargs="?", const="all", default=None,
+                    choices=("all", "nonconv", "cls"),
+                    help="排除检测头的一部分不量化。all=整个 /model.22；"
+                         "nonconv=只排不带权重的解码节点（省体积）；"
+                         "cls=只排分类分支 cv3")
     ap.add_argument("--head-prefix", default="/model.22",
                     help="检测头节点名前缀")
     args = ap.parse_args()
@@ -109,11 +112,20 @@ def main():
 
     nodes_to_exclude = None
     if args.exclude_head:
-        nodes_to_exclude = [n.name for n in m.graph.node if n.name.startswith(args.head_prefix)]
-        print(f"排除检测头: {len(nodes_to_exclude)} 个节点（前缀 {args.head_prefix}）")
+        head = [n.name for n in m.graph.node if n.name.startswith(args.head_prefix)]
+        if args.exclude_head == "all":
+            nodes_to_exclude = head
+        elif args.exclude_head == "nonconv":
+            # 只排解码路径（不带权重）：Sigmoid / Concat / Reshape / Slice / Sub / Div / dfl
+            nodes_to_exclude = [n for n in head
+                                if "/cv2." not in n and "/cv3." not in n]
+        else:  # cls
+            nodes_to_exclude = [n for n in head if "/cv3." in n]
+        print(f"排除检测头[{args.exclude_head}]: {len(nodes_to_exclude)} / {len(head)} 个节点"
+              f"（前缀 {args.head_prefix}）")
         if not nodes_to_exclude:
             heads = sorted({n.name.split("/")[1] for n in m.graph.node if n.name.startswith("/")})
-            print(f"  ⚠ 前缀没匹配到任何节点，图里的顶层模块有: {heads[:12]}")
+            print(f"  ⚠ 没匹配到节点，图里的顶层模块有: {heads[:12]}")
 
     quantize_static(
         model_input=str(model_path),
