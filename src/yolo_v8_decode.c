@@ -40,7 +40,7 @@ int yolo_v8_anchor_stride(int img_size, int index)
 
 /* 把锚点索引映射成网格坐标（单位=网格，中心偏移 0.5）。
  * 顺序与 ultralytics 的 make_anchors 一致：按 stride 分块，块内按 y 行优先。 */
-static void anchor_xy(int img_size, int index, float *ax, float *ay, int *stride)
+void yolo_v8_anchor(int img_size, int index, float *ax, float *ay, int *stride)
 {
     int base = 0;
     int i;
@@ -66,8 +66,9 @@ static void anchor_xy(int img_size, int index, float *ax, float *ay, int *stride
 
 /* 对 REG_MAX 个 logit 做 softmax，再按 0..REG_MAX-1 加权求和 → 期望距离
  * 注意：必须带锚点索引 n，否则整块锚点会共用同一组距离（曾经的 bug）
- * 优化：exp 只算一遍存进栈数组，省掉一半 expf 调用（MCU 上很值钱） */
-static float dfl_expect(const float *logits, int n_anchors, int c, int n)
+ * 优化：exp 只算一遍存进栈数组，省掉一半 expf 调用（MCU 上很值钱）
+ * 对外开放：融合后处理（yolo_v8_postprocess）需要单独对某个锚点算 DFL */
+float yolo_v8_dfl(const float *logits, int n_anchors, int c, int n)
 {
     float e[YOLO_REG_MAX];
     float m = -INFINITY;
@@ -119,12 +120,12 @@ int yolo_v8_decode(const float *box_logits,
         float *o = out + n;
         int c;
 
-        anchor_xy(img_size, n, &ax, &ay, &stride);
+        yolo_v8_anchor(img_size, n, &ax, &ay, &stride);
 
-        lt = dfl_expect(box_logits, n_anchors, 0, n);
-        tp = dfl_expect(box_logits, n_anchors, 1, n);
-        rt = dfl_expect(box_logits, n_anchors, 2, n);
-        bt = dfl_expect(box_logits, n_anchors, 3, n);
+        lt = yolo_v8_dfl(box_logits, n_anchors, 0, n);
+        tp = yolo_v8_dfl(box_logits, n_anchors, 1, n);
+        rt = yolo_v8_dfl(box_logits, n_anchors, 2, n);
+        bt = yolo_v8_dfl(box_logits, n_anchors, 3, n);
 
         x1 = ax - lt;
         y1 = ay - tp;

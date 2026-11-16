@@ -260,6 +260,65 @@ NPU 输出（原始头）
 **不能直接外推到 M55**（时钟低 ~5 倍、libm 的 `expf` 更慢、没有向量化），
 保守估计板端会到 **几毫秒** 量级——对 30 ms 一帧的目标不能忽略。
 
-优化方向（下一轮）：**先按 cls 置信度剪枝，只对通过的锚点算 DFL**。
-1029 个锚点里通常只有几十个过阈值，能省掉 90%+ 的 `expf`。
-实现上要把 decode 和 NMS 融合成一个 `yolo_v8_postprocess()`，避免为每个锚点都做完整解码。
+所以做了融合版，见 §9。
+
+---
+
+## 9 融合后处理：`yolo_v8_postprocess()`（`src/yolo_v8_post.c`）
+
+### 9.1 思路：先剪枝，再解码
+
+两步法的浪费在于：**对所有 1029 个锚点都算完整 DFL**，但通常只有几十个锚点能过置信度阈值。
+
+```
+两步法：decode 全场 → [4+nc, N] → 再筛        共 1029×4×16 = 65,856 次 expf
+融合法：先算 cls → 只对通过的锚点算 DFL         1029 次 + 约 50×64 ≈ 4,200 次
+```
+
+```c
+int yolo_v8_postprocess(const float *box_logits, const float *cls_logits,
+                        int img_size, int n_classes,
+                        float conf_thres, float iou_thres, int max_det,
+                        yolo_det_t *cand, int cand_cap,
+                        yolo_det_t *out,  int out_cap);
+```
+
+顺带还省掉一块内存：**不再需要 `[4+nc, N]` 的中间 buffer**
+（224 输入 / 1 类时是 20,580 字节），直接产出检测框。
+
+### 9.2 等价性与加速比
+
+```powershell
+& $py notebooks\check_c_fused.py best_head.onnx best.onnx `
+    datasets\person128\images\val build\test_pipeline.exe build\test_post.exe 224 0.25 0.45 30
+```
+
+| 项 | 结果 |
+| :--- | :--- |
+| 参考（ultralytics 全流程） | 60 框 |
+| 两步法 | 60 框 |
+| 融合法 | 60 框 |
+| **两步 vs 融合 最大差值** | **0.000000000**（逐位一致） |
+| IoU>0.5 匹配（两步 / 融合） | 60 / 60 |
+
+主机端耗时（300 次平均）：
+
+| 实现 | 耗时 |
+| :--- | ---: |
+| 两步法 decode + NMS | 0.577 ms/帧 |
+| **融合法 postprocess** | **0.013 ms/帧** |
+
+**44 倍**。这个差距全部来自剪枝——省掉的是 95% 以上锚点的 `expf`。
+
+> 注意：0.013 ms 是 x86 上的数字，M55 上会慢一个量级，但**比例关系大致成立**。
+> 这正是板端最值得做的优化，比优化 `expf` 本身收益大得多。
+
+### 9.3 接口选择
+
+| 场景 | 用哪个 |
+| :--- | :--- |
+| 固件实际运行 | **`yolo_v8_postprocess()`**（快、省内存） |
+| 需要逐锚点的调试/可视化 | `yolo_v8_decode()` + `yolo_v8_nms()`（输出完整张量，便于比对） |
+
+两个实现共用 `yolo_v8_dfl()` / `yolo_v8_anchor()` / `yolo_v8_nms_dets()`，
+等价性由上面的对比测试保证。

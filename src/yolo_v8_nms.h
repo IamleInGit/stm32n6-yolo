@@ -56,6 +56,15 @@ int yolo_v8_nms(const float *dec,
 /** 两个框的 IoU（供单元测试复用） */
 float yolo_box_iou(const yolo_det_t *a, const yolo_det_t *b);
 
+/**
+ * @brief 直接对候选集做类内 NMS（候选需按分数降序）
+ *
+ * 与 yolo_v8_nms() 的区别：那个从完整张量里筛，这个只处理已经挑出来的候选，
+ * 供融合后处理 yolo_v8_postprocess() 使用。
+ */
+int yolo_v8_nms_dets(const yolo_det_t *cand, int n_cand, float iou_thres,
+                     int max_det, yolo_det_t *out, int out_cap);
+
 #ifdef __cplusplus
 }
 #endif

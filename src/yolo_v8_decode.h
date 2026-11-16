@@ -48,6 +48,12 @@ int yolo_v8_anchor_count(int img_size);
 /** 某个锚点对应的 stride（8/16/32） */
 int yolo_v8_anchor_stride(int img_size, int index);
 
+/** 某个锚点的网格中心坐标（单位=网格）；stride 可为 NULL */
+void yolo_v8_anchor(int img_size, int index, float *ax, float *ay, int *stride);
+
+/** 单个锚点、单个边通道的 DFL 期望距离（供融合后处理单独调用） */
+float yolo_v8_dfl(const float *box_logits, int n_anchors, int channel, int index);
+
 #ifdef __cplusplus
 }
 #endif

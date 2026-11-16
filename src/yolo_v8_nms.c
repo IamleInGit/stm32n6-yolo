@@ -49,6 +49,34 @@ static void insert_sorted(yolo_det_t *arr, int *n, int cap, const yolo_det_t *v)
     arr[i] = *v;
 }
 
+int yolo_v8_nms_dets(const yolo_det_t *cand, int n_cand, float iou_thres,
+                     int max_det, yolo_det_t *out, int out_cap)
+{
+    int i, kept = 0;
+
+    if (cand == 0 || out == 0 || n_cand < 0 || out_cap <= 0 || max_det <= 0) {
+        return -1;
+    }
+    if (max_det > out_cap) {
+        max_det = out_cap;
+    }
+    for (i = 0; i < n_cand && kept < max_det; i++) {
+        int m;
+        int suppressed = 0;
+        for (m = 0; m < kept; m++) {
+            if (out[m].cls == cand[i].cls &&
+                yolo_box_iou(&cand[i], &out[m]) > iou_thres) {
+                suppressed = 1;
+                break;
+            }
+        }
+        if (!suppressed) {
+            out[kept++] = cand[i];
+        }
+    }
+    return kept;
+}
+
 int yolo_v8_nms(const float *dec,
                 int n_classes,
                 int n_anchors,
