@@ -80,6 +80,12 @@ def main():
     ap.add_argument("--limit", type=int, default=None, help="只用前 N 张校准")
     ap.add_argument("--calib", default="minmax", choices=("minmax", "percentile", "entropy"),
                     help="校准方法；minmax 对离群值最敏感")
+    ap.add_argument("--act", default="quint8", choices=("quint8", "qint8"),
+                    help="激活量化类型；YOLO 检测头对 uint8 激活较敏感")
+    ap.add_argument("--exclude-head", action="store_true",
+                    help="把检测头（默认 /model.22 前缀）排除在量化之外，留在 float")
+    ap.add_argument("--head-prefix", default="/model.22",
+                    help="检测头节点名前缀")
     args = ap.parse_args()
 
     import onnx
@@ -101,14 +107,23 @@ def main():
         return 2
     print(f"校准集    : {n} 张图 @ {args.size}x{args.size}")
 
+    nodes_to_exclude = None
+    if args.exclude_head:
+        nodes_to_exclude = [n.name for n in m.graph.node if n.name.startswith(args.head_prefix)]
+        print(f"排除检测头: {len(nodes_to_exclude)} 个节点（前缀 {args.head_prefix}）")
+        if not nodes_to_exclude:
+            heads = sorted({n.name.split("/")[1] for n in m.graph.node if n.name.startswith("/")})
+            print(f"  ⚠ 前缀没匹配到任何节点，图里的顶层模块有: {heads[:12]}")
+
     quantize_static(
         model_input=str(model_path),
         model_output=str(out_path),
         calibration_data_reader=reader,
         quant_format=QuantFormat.QDQ,
         per_channel=True,                 # 对齐 ST modelzoo 的 granularity: per_channel
-        activation_type=QuantType.QUInt8,  # 激活用 uint8
+        activation_type=QuantType.QUInt8 if args.act == "quint8" else QuantType.QInt8,
         weight_type=QuantType.QInt8,       # 权重用 int8
+        nodes_to_exclude=nodes_to_exclude,
         calibrate_method={
             "minmax": CalibrationMethod.MinMax,
             "percentile": CalibrationMethod.Percentile,
