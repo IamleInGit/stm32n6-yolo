@@ -45,7 +45,7 @@ def main(argv):
     worst_iou, worst_score = 1.0, 0.0
     print(f"\n{'image':<22}{'参考':>6}{'C链路':>7}{'IoU>.99':>9}{'IoU>.5':>8}{'最小IoU':>10}")
     for p in imgs:
-        x = _prep(p)
+        x = _prep(p, imgsz)
 
         # A: 参考路径
         pred_full = _run(full_onnx, x)[0]

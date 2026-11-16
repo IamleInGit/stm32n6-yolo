@@ -48,7 +48,7 @@ def main(argv):
     total = 0
     print(f"\n{'image':<22}{'最大差异':>12}{'平均差异':>12}")
     for p in imgs:
-        x = _prep(p)
+        x = _prep(p, imgsz)
         box, cls = _run(model, x)
         box = np.ascontiguousarray(box, dtype=np.float32)
         cls = np.ascontiguousarray(cls, dtype=np.float32)

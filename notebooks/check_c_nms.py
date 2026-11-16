@@ -66,7 +66,7 @@ def main(argv):
     worst_score = 0.0
     print(f"\n{'image':<22}{'ultralytics':>12}{'C':>6}{'匹配':>6}{'最小IoU':>10}")
     for p in imgs:
-        pred = _run(model, _prep(p))[0]
+        pred = _run(model, _prep(p, imgsz))[0]
         (tmp / "dec.bin").write_bytes(np.ascontiguousarray(pred, dtype=np.float32).tobytes())
 
         r = subprocess.run([exe, str(tmp / "dec.bin"), str(tmp / "nms.txt"),

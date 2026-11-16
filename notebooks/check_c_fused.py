@@ -63,7 +63,7 @@ def main(argv):
     tot = {"ref": 0, "two": 0, "fus": 0, "two_match": 0, "fus_match": 0}
     print(f"{'image':<22}{'参考':>6}{'两步':>6}{'融合':>6}{'两步==融合':>12}")
     for p in imgs:
-        x = _prep(p)
+        x = _prep(p, imgsz)
         det_ref = ref_nms(_run(full_onnx, x)[0], conf, iou, max_det)
         box, cls = _run(head_onnx, x)
         (tmp / "b.bin").write_bytes(np.ascontiguousarray(box, np.float32).tobytes())
