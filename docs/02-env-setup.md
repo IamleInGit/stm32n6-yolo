@@ -239,7 +239,32 @@ $env:UV_CACHE_DIR = "D:\STM32N6\uv-cache"        # 缓存放 D:，别占 C:
 
 ---
 
-## 8 阶段 0a 完成判据
+## 8 主机端 C 编译器（zig，免安装）
+
+本机原本**没有任何 C 编译器**（无 cl / gcc / clang / make / cmake），
+但 `src/` 里的解码代码需要真正编译验证。解决办法：
+
+```powershell
+python -m pip install --user uv            # 已有
+& $uv pip install --python D:\STM32N6\py\yolo312\Scripts\python.exe ziglang
+& $py -m ziglang cc --version              # clang 22.1.8
+```
+
+`ziglang` 是 PyPI 上的 wheel 包，自带完整的 zig（含 C 编译器），**不需要管理员权限**。
+
+```powershell
+& $py -m ziglang cc -O2 -Wall -Wextra -std=c99 -o test_decode.exe src\test_decode.c src\yolo_v8_decode.c
+```
+
+> **一个网络上的实测发现**：这台机器只有 **PyPI 是快的**（~2 MB/s），
+> 其它站点（`ziglang.org`、`images.cocodataset.org`、`github.com`）一律被限到 **≈46 KB/s**，
+> 而且 `images.cocodataset.org` 的 HTTPS 还会证书不匹配（`SEC_E_WRONG_PRINCIPAL`）。
+> **结论：需要什么工具，优先找 PyPI 上的 wheel 包，别直接下压缩包。**
+> 96 MB 的 zig 直接下载要 35 分钟，走 PyPI 只用了 1 分 16 秒。
+
+---
+
+## 9 阶段 0a 完成判据
 
 - [ ] `STM32_Programmer_CLI --version` 正常输出版本
 - [ ] CubeIDE 1.17.0 启动正常
@@ -252,7 +277,7 @@ $env:UV_CACHE_DIR = "D:\STM32N6\uv-cache"        # 缓存放 D:，别占 C:
 
 ---
 
-## 9 仓库自带工具（不装任何 ST 工具也能跑）
+## 10 仓库自带工具（不装任何 ST 工具也能跑）
 
 | 脚本 | 用途 | 用法 |
 | :--- | :--- | :--- |
