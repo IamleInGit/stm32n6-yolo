@@ -144,3 +144,64 @@ MCU 上的开销估算（**待实测**）：M55 上 `expf` 若按几十个周期
 - 如果它要已解码 → 这段代码仍要做，只是把结果喂给它，或者用 05 文档里的 `nonconv` 方案让模型自己解码
 
 这个答案决定输出 buffer 是 20 KB 还是 267 KB，是阶段 4 的第一个待办。
+
+---
+
+## 7 NMS 实现与验证（`src/yolo_v8_nms.c`）
+
+后处理的第二块：把解码后的 `[4+nc, N]` 变成最终检测框。
+
+### 7.1 接口
+
+```c
+typedef struct { float x1, y1, x2, y2, score; int cls; } yolo_det_t;
+
+int yolo_v8_nms(const float *dec, int n_classes, int n_anchors,
+                float conf_thres, float iou_thres, int max_det,
+                yolo_det_t *cand, int cand_cap,     /* 调用方提供的 scratch */
+                yolo_det_t *out,  int out_cap);
+```
+
+设计取舍：
+
+| 决定 | 理由 |
+| :--- | :--- |
+| 不 malloc，候选数组由调用方给 | MCU 上避免堆碎片和不确定性 |
+| 按类分别 NMS | 与 ultralytics 的类内 NMS 语义一致 |
+| 插入排序保留 top-K，不做全表快排 | 候选数通常只有几十个 |
+| 已保留的框直接放在 `out[]`，拿它当"保留集合" | 省掉一块额外索引内存 |
+
+### 7.2 验证：与 ultralytics 逐框比对
+
+```powershell
+& $py notebooks\check_c_nms.py runs\person224\weights\best.onnx `
+    datasets\person128\images\val build\test_nms.exe 224 0.25 0.45 30
+```
+
+| 阈值组合 | ultralytics | C 实现 | 匹配 | 最小 IoU |
+| :--- | ---: | ---: | ---: | ---: |
+| conf 0.25 / iou 0.45 / max_det 30 | 60 | 60 | **60** | **1.00000** |
+| conf 0.001 / iou 0.7 / max_det 100 | 861 | 861 | **861** | **1.00000** |
+
+最大分数差 1e-6（float32 打印精度）。**逐位等价**，不是"差不多"。
+
+低阈值那组是有意加的压测：mAP 计算就是用 conf=0.001，候选框数量多一个数量级，
+最容易暴露 top-K 截断或排序稳定性的问题。
+
+### 7.3 过程中修掉的一个逻辑错误
+
+第一版用 `score = -1` 标记"已保留"，结果比较循环的判断写反了
+（变成了跳过已保留的、只跟被抑制的比较）。改成"`out[]` 即保留集合"后逻辑自明，也不易再写错。
+
+> 这类错误编译器不会提醒，跑起来也能出框，只有逐框比对才能发现。
+
+### 7.4 现在的完整后处理栈
+
+```
+NPU 输出（原始头）
+  └─ yolo_v8_decode()  → [4+nc, N]  (cx,cy,w,h,score)   ✅ 已验证 6.1e-5
+       └─ yolo_v8_nms() → yolo_det_t[]                   ✅ 已验证 逐位一致
+            └─ 画框（复用 991 的 app_lcd.c / stm32_lcd_ex.c）
+```
+
+两块都通过了数值级验证，等 STEdgeAI 生成 `network.c` 后就能接线。

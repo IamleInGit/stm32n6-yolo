@@ -5,6 +5,7 @@
 #include "yolo_v8_decode.h"
 
 #include <math.h>
+#include <stddef.h>
 
 #define N_STRIDES 3
 
