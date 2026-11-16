@@ -205,3 +205,61 @@ NPU 输出（原始头）
 ```
 
 两块都通过了数值级验证，等 STEdgeAI 生成 `network.c` 后就能接线。
+
+---
+
+## 8 端到端验证（`src/test_pipeline.c`）
+
+把两块串起来，对比 ultralytics 的**完整流程**（完整 ONNX → NMS），而不是只比单个函数。
+
+```powershell
+& $py -m ziglang cc -O2 -Wall -Wextra -std=c99 -o build\test_pipeline.exe `
+    src\test_pipeline.c src\yolo_v8_decode.c src\yolo_v8_nms.c
+
+& $py notebooks\check_c_pipeline.py best_head.onnx best.onnx `
+    datasets\person128\images\val build\test_pipeline.exe 224 0.25 0.45 30
+```
+
+### 8.1 fp32：完全一致
+
+| 项 | 结果 |
+| :--- | :--- |
+| 参考（ultralytics 全流程） | 60 框 |
+| C 链路（原始头 → decode → NMS） | 60 框 |
+| 匹配 | **60 / 60** |
+| 最小 IoU | **1.00000** |
+| 最大分数差 | 1e-6 |
+
+### 8.2 int8：位置几乎不变，置信度会挪
+
+用 `best_head_int8.onnx`（全 int8、无 float 例外）跑同一条 C 链路，对比 fp32 全流程：
+
+| 项 | 结果 |
+| :--- | :--- |
+| 参考 / C 链路（conf 0.25） | 60 / **50** 框 |
+| IoU > 0.5 的匹配 | **49 / 50** |
+| IoU > 0.99 的匹配 | 6 / 50 |
+| 最大分数差 | **0.037** |
+
+**怎么读这组数**：
+
+1. **位置基本没漂**：49/50 个框的 IoU 都大于 0.5。
+2. **掉的是置信度**：最大分数差 0.037，正好够让边缘框跌破 0.25 的门限，
+   所以 60 → 50。这些框在 mAP 计算（conf=0.001）里仍然存在，只是排序变了。
+   这和阶段 2 的结果一致：`nonconv` 方案 mAP50 只掉 0.028。
+3. **IoU>0.99 只有 6 个不代表框歪了**：这是个数学问题——
+   一个 20×40 的框偏 1 px，IoU 就已经是 `19×39/(20×40) ≈ 0.93`。
+   小目标的 IoU 对亚像素偏移极其敏感，**用 0.99 当框准不准的判据是错的**。
+
+### 8.3 主机端耗时
+
+```
+主机端 decode+NMS: 0.708 ms/帧（1029 锚点，500 次平均，i5-12400F）
+```
+
+**不能直接外推到 M55**（时钟低 ~5 倍、libm 的 `expf` 更慢、没有向量化），
+保守估计板端会到 **几毫秒** 量级——对 30 ms 一帧的目标不能忽略。
+
+优化方向（下一轮）：**先按 cls 置信度剪枝，只对通过的锚点算 DFL**。
+1029 个锚点里通常只有几十个过阈值，能省掉 90%+ 的 `expf`。
+实现上要把 decode 和 NMS 融合成一个 `yolo_v8_postprocess()`，避免为每个锚点都做完整解码。
