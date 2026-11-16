@@ -43,7 +43,16 @@ assets/     图片、波形、实测截图
 
 ### 环境
 
-待补。每跑通一步，把版本号、命令、踩到的坑记进 `docs/`。
+安装步骤、验收命令与踩坑记录见 [docs/02-env-setup.md](docs/02-env-setup.md)。每跑通一步，把版本号、命令、坑记进 `docs/`。
+
+| 组件 | 版本 |
+| :--- | :--- |
+| 开发板 | 正点原子 ATK-CNN647B（STM32N647X0HxQ） |
+| 摄像头 | IMX335（在途） |
+| STM32CubeIDE | 1.17.0 |
+| STM32CubeProgrammer | 2.18.0 |
+| ST Edge AI Core | 4.0.0（待装） |
+| Python | 3.12.16（uv，已装于 `D:\STM32N6\py\yolo312`；系统自带 3.14 工具链不支持） |
 
 ### 说明
 

@@ -4,21 +4,47 @@
 
 ## 阶段 0 · 环境
 
-- [ ] 拿到板子，确认型号、供电、调试接口（SWD）
-- [ ] 装 STM32CubeIDE / STM32CubeProgrammer，跑通点灯
-- [ ] 装 ST Edge AI（原 STM32Cube.AI），跑通官方示例
+板子已确认：正点原子 **ATK-CNN647B**（STM32N647X0HxQ），无片内 Flash。
+拆成三小步，每步都有可验收的东西，避免"装了一堆工具但什么都没跑起来"。
+盘点见 [01-assets.md](01-assets.md)，安装步骤见 [02-env-setup.md](02-env-setup.md)。
+
+**0a · 工具链**（不用等摄像头）
+
+- [ ] 装 STM32CubeIDE 1.17.0 + STM32CubeProgrammer 2.18+
+- [ ] 把 ATK 的 `.stldr` 外部 Flash 加载器拷进 CubeProgrammer
+- [ ] `352_IMX335` **原地**编译 0 error（例程不能拷出来单独建工程）
 - [ ] 记录：工具版本、烧录命令、驱动踩坑
 
-**验收**：能用官方示例把一张图跑出分类结果。
+**验收**：CubeIDE 构建通过，`-c port=SWD mode=HOTPLUG` 能连上板子。
 
-## 阶段 1 · 基线
+**0b · 硬件自检**（等 IMX335 到货）
 
-- [ ] 选一个公开数据集（先别自己标数据）
-- [ ] 在 PC 上训练一个 YOLO，记录 mAP
-- [ ] 固定输入分辨率、类别数、评测脚本
-- [ ] 把模型导出成 ONNX
+- [ ] 烧 `352_IMX335`，确认摄像头 → 屏 通路
+- [ ] 确认外部 Flash 型号（BY25FQ128EL / DUAL / MX25UM25645G 三选一，选错起不来）
 
-**验收**：PC 上能复现出 mAP，且导出过程可重跑。
+**验收**：屏上出连续画面，无撕裂。
+
+**0c · AI 通路**
+
+- [ ] 烧 `991_AI_People_Detection` 的预编译产物（fsbl + network-data + appli）
+- [ ] 屏上出现人体检测框
+
+**验收**：框随人移动。此步过后 NPU、权重加载、后处理、显示四者全通，后面不必再怀疑硬件。
+
+## 阶段 1 · 基线 ✅ 初步完成（数据集偏小）
+
+> 单类 person 基线已成立：coco128 过滤出 61 张 → 48/13 切分 → 224 训练 40 epoch
+> → **mAP50 0.575 / mAP50-95 0.340** → 导出 ONNX opset 17，输出 `[1, 5, 1029]`。
+> 详见 [`04-baseline-pipeline.md`](04-baseline-pipeline.md)。
+> 局限：验证集只有 13 张，指标只能用于**相对比较**，不能对外声称精度。
+
+- [x] 选一个公开数据集（先别自己标数据）—— coco128 子集，见 `notebooks/make_person_dataset.py`
+- [x] 在 PC 上训练一个 YOLO，记录 mAP —— 单类，40 epoch，CPU 54 秒
+- [x] 固定输入分辨率、类别数、评测脚本 —— 224 / 1 类 / `person128.yaml`
+- [x] 把模型导出成 ONNX —— opset 17，无 NMS，输出 5,145 元素
+- [ ] 换更大数据集重跑（COCO val2017 的 person 子集，约 2500 张）
+
+**验收**：PC 上能复现出 mAP，且导出过程可重跑。✅
 
 ## 阶段 2 · 量化
 
