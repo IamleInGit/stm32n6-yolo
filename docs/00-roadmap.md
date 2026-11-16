@@ -68,6 +68,8 @@
 > **前置件已就绪**（只等 STEdgeAI）：
 > - 模型：`best_int8_nonconv.onnx`（3.34 MB，mAP50 0.547）、截断版 `best_head_int8.onnx`（3.31 MB）
 > - MCU 侧解码：[`src/yolo_v8_decode.c`](../src/yolo_v8_decode.c)，已与 numpy 参考逐值对齐（最大差 6.1e-5）
+> - 端到端后处理：[`src/yolo_v8_post.c`](../src/yolo_v8_post.c)，224/320/416 三个尺寸均与 ultralytics 逐位一致
+> - **操作手册：[`07-deployment-runbook.md`](07-deployment-runbook.md)**（工具到位后照着做）
 > - 阻塞：STEdgeAI 未安装，`network.c` 生成不了；且需确认 ST 的 PP 库要原始头还是已解码输入
 
 - [ ] 模型转成 ST 的中间格式
