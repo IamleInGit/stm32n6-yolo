@@ -1,0 +1,23 @@
+# ST tflite_quant.py 配置模板（来自 stm32ai-modelzoo-services 的 yolov8 量化脚本）
+#
+# 关键点：
+#   1. quantization_type 必须是 per_channel
+#   2. 输入必须是 uint8（DCMIPP 输出即 uint8）
+#   3. calib_dataset_path 必须用本场景的真实图片，不要用 coco8
+
+model:
+  name: yolov8n_256
+  uc: od_coco
+  model_path: ./yolov8n_saved_model   # ultralytics 导出 int8=True 时生成的目录
+  input_shape: [256, 256, 3]
+
+quantization:
+  quantization_type: per_channel
+  quantization_input_type: uint8
+  quantization_output_type: float     # 也可用 int8；float 便于后处理调试
+  calib_dataset_path: ./datasets/calib   # 100 张左右真实场景图
+  export_path: ./quantized_models
+
+# 归一化：[0,1] 用 scale=255, offset=0；[-1,1] 用 scale=127.5, offset=-1
+pre_processing:
+  rescaling: {scale: 255, offset: 0}

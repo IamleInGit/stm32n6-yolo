@@ -1,0 +1,17 @@
+# 数据集配置模板：复制为 configs/my_dataset.yaml 后修改
+#
+# 目录约定：
+#   datasets/my_dataset/
+#   ├── images/train/*.jpg
+#   ├── images/val/*.jpg
+#   ├── labels/train/*.txt    # YOLO 格式：class cx cy w h（归一化）
+#   └── labels/val/*.txt
+
+path: ./datasets/my_dataset
+train: images/train
+val: images/val
+
+# 类别数与顺序必须和标注文件里的 class id 一致
+names:
+  0: cat
+  1: dog
