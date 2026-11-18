@@ -22,6 +22,15 @@ Release/
 # 模型与大文件（保留目录占位）
 models/*
 !models/.gitkeep
+*.pt
+*.onnx
+*.tflite
+st_ai_output/
+
+# 数据集与实验产物（体积大、含隐私）
+datasets/
+my_photos/
+results/
 
 # Python
 __pycache__/

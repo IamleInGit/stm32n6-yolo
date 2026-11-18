@@ -36,6 +36,8 @@
 ```
 src/        固件代码
 notebooks/  训练、量化、评估脚本
+tools/      PC 侧可复现脚本（环境自检、分辨率对比、模型导出）
+configs/    数据集与量化配置模板
 models/     模型产物（大文件不入库）
 docs/       路线图与学习笔记
 assets/     图片、波形、实测截图
@@ -43,7 +45,13 @@ assets/     图片、波形、实测截图
 
 ### 环境
 
-待补。每跑通一步，把版本号、命令、踩到的坑记进 `docs/`。
+工具版本矩阵、安装顺序、Python 环境见 [docs/02-environment.md](docs/02-environment.md)。
+
+每跑通一步，把版本号、命令、踩到的坑记进 `docs/`。
+
+### 文档
+
+[路线图](docs/00-roadmap.md) · [硬件与接线](docs/01-hardware.md) · [环境搭建](docs/02-environment.md) · [烧录与 BOOT](docs/03-flashing.md) · [模型转换](docs/04-model-pipeline.md) · [踩坑记录](docs/05-pitfalls.md) · [三周排期](docs/06-plan.md)
 
 ### 说明
 
@@ -75,7 +83,13 @@ Details and acceptance criteria: [docs/00-roadmap.md](docs/00-roadmap.md).
 ```
 src/        firmware
 notebooks/  training, quantization, evaluation scripts
+tools/      reproducible PC-side scripts (env check, resolution sweep, export)
+configs/    dataset and quantization config templates
 models/     model artifacts (large files are not committed)
 docs/       roadmap and study notes
 assets/     images, waveforms, measurements
 ```
+
+### Docs
+
+[Roadmap](docs/00-roadmap.md) · [Hardware](docs/01-hardware.md) · [Environment](docs/02-environment.md) · [Flashing & boot](docs/03-flashing.md) · [Model pipeline](docs/04-model-pipeline.md) · [Pitfalls](docs/05-pitfalls.md) · [3-week plan](docs/06-plan.md)
