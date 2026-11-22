@@ -17,10 +17,39 @@
 | 权限 | 本机管理员 | 装 ST-LINK 驱动要提权 |
 | 网络 | 能访问 st.com | 国内下载慢是常态，建议提前挂着下 |
 
-> **本机实测（2026-11-16）**：C: 只剩 **20.3 GB**，D: 有 **142.9 GB**。
-> 建议 CubeIDE / CubeProgrammer / STEdgeAI **一律装到 D:**（如 `D:\ST\STM32CubeIDE_1.17.0`），
-> 把 C: 留给系统和 `%TEMP%`——ST 的安装器和编译过程都会大量写临时文件。
-> 装到 D: 后，下文所有 `C:\ST\...` 路径按实际替换。
+> **本机实测（2026-11-22）**：C: 只剩 **14.3 GB**，D: 有 **141.3 GB**。
+> ST 三件套**一律装 D:**——CubeIDE 约 3 GB、CubeProgrammer 约 1 GB、STEdgeAI 约 2 GB，
+> 装 C: 会直接告急，而且安装和编译过程还会大量写 `%TEMP%`。
+
+### 0.1 路径约定（下文所有命令都按这个来）
+
+| 工具 | 安装路径 |
+| :--- | :--- |
+| STM32CubeIDE 1.17.0 | `D:\ST\STM32CubeIDE_1.17.0` |
+| STM32CubeProgrammer | `D:\ST\STM32CubeProgrammer` |
+| ST Edge AI Core 4.0 | `D:\ST\STEdgeAI\4.0` |
+
+PowerShell 里先把变量定下来，后面直接复用：
+
+```powershell
+$ST  = "D:\ST"
+$IDE = "$ST\STM32CubeIDE_1.17.0"
+$CP  = "$ST\STM32CubeProgrammer"
+$AI  = "$ST\STEdgeAI\4.0"
+```
+
+> ⚠️ **CubeProgrammer 的安装器有个坑**：它默认路径是
+> `C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer`。
+> 只把盘符改成 D，会得到 `D:\ST\STMicroelectronics\STM32Cube\STM32CubeProgrammer`——
+> 凭空多两层，下文命令全对不上。
+> **在安装器里把整条路径替换成 `D:\ST\STM32CubeProgrammer`。**
+
+装完如果路径和上表不一致（比如 STEdgeAI 自动加了版本层），用这条找真实位置再改变量：
+
+```powershell
+Get-ChildItem D:\ST -Recurse -Filter STM32_Programmer_CLI.exe -EA SilentlyContinue |
+    Select-Object -First 1 -ExpandProperty FullName
+```
 
 **先避开一个坑**：机器上已装的 `STM32 ST-LINK Utility`（`C:\Program Files (x86)\STMicroelectronics`）
 是 2005 年代的老工具，**不支持 STM32N6**，本项目的烧录一律用 CubeProgrammer。
@@ -34,13 +63,13 @@ CubeIDE 1.17.0 内置的正是 6.13.0。版本错配会在打开工程时触发 
 轻则要重新配一遍编译选项，重则链接脚本和 include 路径全丢。
 
 - 下载页：<https://www.st.com/en/development-tools/stm32cubeide.html>（选 **1.17.0**，不要点最新版）
-- 安装路径建议：`C:\ST\STM32CubeIDE_1.17.0`
+- 安装路径建议：`D:\ST\STM32CubeIDE_1.17.0`
 - 安装选项：
   - ✅ ST-LINK 驱动（GDB server / ST-LINK server 一起装）
   - ✅ 关联 `.ioc`（可选，方便双击打开）
   - ⬜ 不需要装到 PATH
 
-安装完成后可执行文件在：`C:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe`
+安装完成后可执行文件在：`D:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe`
 
 > **工作区（workspace）不要设在 git 仓库里**。建议 `D:\STM32N6\workspace`。
 > CubeIDE 会在工作区里生成巨大的 `.metadata\`，放进仓库只会污染 git。
@@ -54,7 +83,7 @@ CubeIDE 1.17.0 内置的正是 6.13.0。版本错配会在打开工程时触发 
   - ✅ **ST-LINK driver**（必须，否则连不上板）
   - ✅ ST-LINK server（CubeIDE 调试时共用，建议装）
   - ✅ 加入 PATH（勾了省事；没勾就手动加，见下）
-- 默认路径：`C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer`
+- 默认路径：`D:\ST\STM32CubeProgrammer`
 - 命令行工具都在 `bin\` 下：
   - `STM32_Programmer_CLI.exe` —— 烧录
   - `STM32_SigningTool_CLI.exe` —— 签名（脱机启动时才用）
@@ -63,7 +92,7 @@ CubeIDE 1.17.0 内置的正是 6.13.0。版本错配会在打开工程时触发 
 手动加 PATH（PowerShell，需重开终端生效）：
 
 ```powershell
-$cp = "C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin"
+$cp = "D:\ST\STM32CubeProgrammer\bin"
 [Environment]::SetEnvironmentVariable(
   "Path",
   [Environment]::GetEnvironmentVariable("Path","Machine") + ";$cp",
@@ -79,7 +108,7 @@ N6 没有片内 Flash，程序要写进板上 NOR，CubeProgrammer 必须靠 `.s
 
 ```powershell
 $src = "D:\STM32N6\SoftwarePackage\External_Loader"
-$dst = "C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\ExternalLoader"
+$dst = "D:\ST\STM32CubeProgrammer\bin\ExternalLoader"
 
 Get-ChildItem $src -Recurse -Filter *_ATK-CNN647B_ExtMemLoader.stldr |
     Copy-Item -Destination $dst -Force
@@ -116,7 +145,7 @@ STM32_Programmer_CLI --version
 ### 4.2 CubeIDE 就位
 
 ```powershell
-Test-Path "C:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe"
+Test-Path "D:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe"
 ```
 
 期望：`True`
@@ -181,8 +210,8 @@ STM32_Programmer_CLI -c port=SWD mode=HOTPLUG
 ### 6.1 ST Edge AI Core 4.0.0
 
 - 下载页：<https://www.st.com/en/development-tools/stedgeai-core.html>
-- 默认路径：`C:\ST\STEdgeAI\4.0`
-- 可执行文件：`C:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe`
+- 默认路径：`D:\ST\STEdgeAI\4.0`
+- 可执行文件：`D:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe`
 - **版本必须与包内 `NetworkRuntime1000_CM55_GCC.a` 配套**，否则报
   `Possible mismatch in ll_aton library used`
 
@@ -227,11 +256,11 @@ $env:UV_CACHE_DIR = "D:\STM32N6\uv-cache"        # 缓存放 D:，别占 C:
 
 | 组件 | 版本 | 路径 |
 | :--- | :--- | :--- |
-| STM32CubeIDE | 1.17.0 | `C:\ST\STM32CubeIDE_1.17.0` |
-| STM32CubeProgrammer | 2.18.0 | `C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer` |
+| STM32CubeIDE | 1.17.0 | `D:\ST\STM32CubeIDE_1.17.0` |
+| STM32CubeProgrammer | 2.18.0 | `D:\ST\STM32CubeProgrammer` |
 | STM32CubeMX（内置） | 6.13.0 | 随 CubeIDE |
 | STM32Cube FW N6 | V1.0.0 | `D:\STM32N6\SoftwarePackage\STM32Cube_FW_N6_V1.0.0` |
-| ST Edge AI Core | 4.0.0（待装） | `C:\ST\STEdgeAI\4.0` |
+| ST Edge AI Core | 4.0.0（待装） | `D:\ST\STEdgeAI\4.0` |
 | Python | **3.12.16（✅ 已装）** | `D:\STM32N6\py\yolo312` |
 | uv | 0.13.8（✅ 已装） | `%APPDATA%\Python\Python314\Scripts\uv.exe` |
 | 外部 Flash 型号 | **待确认** | — |

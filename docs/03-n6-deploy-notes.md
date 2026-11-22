@@ -78,7 +78,7 @@ else if (NORFlash_IS_MX25UM25645G(JEDECID))      { ... }
 3. **逐个试加载器读一个字**（只读，安全）：
 
 ```powershell
-$bin = "C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin"
+$bin = "D:\ST\STM32CubeProgrammer\bin"
 foreach ($f in "BY25FQ128EL","DUAL_BY25FQ128EL","MX25UM25645G") {
     Write-Host "--- $f"
     & "$bin\STM32_Programmer_CLI.exe" -c port=SWD mode=HOTPLUG `

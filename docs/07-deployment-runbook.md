@@ -12,11 +12,11 @@
 
 | 项 | 要求 | 验证命令 | 依据 |
 | :--- | :--- | :--- | :--- |
-| STM32CubeIDE | 1.17.0 | `Test-Path "C:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe"` | ✅ 版本依据：`.ioc` 是 CubeMX 6.13.0 生成 |
+| STM32CubeIDE | 1.17.0 | `Test-Path "D:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\stm32cubeide.exe"` | ✅ 版本依据：`.ioc` 是 CubeMX 6.13.0 生成 |
 | STM32CubeProgrammer | ≥ 2.18.0 | `STM32_Programmer_CLI --version` | ⚠️ |
 | 外部 Flash 加载器 | 3 个 `.stldr` 已放入 `ExternalLoader\` | 见 `02-env-setup.md` §3 | ✅ |
 | **外部 Flash 型号** | BY25FQ128EL / DUAL / MX25UM25645G | 见 `03-n6-deploy-notes.md` §1.3 | ❓ **必须先确认** |
-| ST Edge AI Core | 4.0.0 | `C:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe --version` | ⚠️ 必须与包内 `ll_aton` 配套 |
+| ST Edge AI Core | 4.0.0 | `D:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe --version` | ⚠️ 必须与包内 `ll_aton` 配套 |
 | 摄像头 | IMX335 | — | ❓ |
 
 **没有 Flash 型号就别往下走**——选错 FSBL 会导致上电不启动。
@@ -51,7 +51,7 @@
 ### 2.1 烧录（顺序不能错）
 
 ```powershell
-$bin = "C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin"
+$bin = "D:\ST\STM32CubeProgrammer\bin"
 $el  = "$bin\ExternalLoader\<你的型号>_ATK-CNN647B_ExtMemLoader.stldr"
 $src = "D:\STM32N6\SoftwarePackage\Projects\99_Applications\991_AI_People_Detection\Binary"
 
