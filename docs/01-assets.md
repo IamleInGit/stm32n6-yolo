@@ -203,8 +203,8 @@ IMX335 ──► DCMIPP PIPE1 ──► LTDC L0（实时画面，800×480）
 
 **阶段 2~3 才需要**
 
-5. ST Edge AI Core **4.0.0**（必须与 `NetworkRuntime1000_CM55_GCC.a` 配套，
-   否则报 `Possible mismatch in ll_aton library used`）
+5. ST Edge AI Core **2.0.0**（`network.c` 第 29 行写着 `STEdgeAI/2.0`，第 51 行要求
+   `ll_aton 1.0.0-dev16`；用别的版本会报 `Possible mismatch in ll_aton library used`）
 6. 独立 Python **3.12** 环境
 7. （可选）`stm32ai-modelzoo-services` 仓库、CMake + Ninja
 

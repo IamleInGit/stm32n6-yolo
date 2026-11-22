@@ -27,7 +27,7 @@
 | :--- | :--- |
 | STM32CubeIDE 1.17.0 | `D:\ST\STM32CubeIDE_1.17.0` |
 | STM32CubeProgrammer | `D:\ST\STM32CubeProgrammer` |
-| ST Edge AI Core 4.0 | `D:\ST\STEdgeAI\4.0` |
+| ST Edge AI Core 4.0 | `D:\ST\STEdgeAI\2.0` |
 
 PowerShell 里先把变量定下来，后面直接复用：
 
@@ -35,7 +35,7 @@ PowerShell 里先把变量定下来，后面直接复用：
 $ST  = "D:\ST"
 $IDE = "$ST\STM32CubeIDE_1.17.0"
 $CP  = "$ST\STM32CubeProgrammer"
-$AI  = "$ST\STEdgeAI\4.0"
+$AI  = "$ST\STEdgeAI\2.0"
 ```
 
 > ⚠️ **CubeProgrammer 的安装器有个坑**：它默认路径是
@@ -207,13 +207,37 @@ STM32_Programmer_CLI -c port=SWD mode=HOTPLUG
 
 ## 6 延后安装（阶段 2~3 再做，别现在折腾）
 
-### 6.1 ST Edge AI Core 4.0.0
+### 6.1 ST Edge AI Core **2.0.0**（不是 4.0）
 
 - 下载页：<https://www.st.com/en/development-tools/stedgeai-core.html>
-- 默认路径：`D:\ST\STEdgeAI\4.0`
-- 可执行文件：`D:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe`
-- **版本必须与包内 `NetworkRuntime1000_CM55_GCC.a` 配套**，否则报
-  `Possible mismatch in ll_aton library used`
+- 默认路径：`D:\ST\STEdgeAI\2.0`
+- 可执行文件：`D:\ST\STEdgeAI\2.0\Utilities\windows\stedgeai.exe`
+
+**版本为什么必须是 2.0** —— 从包内文件里直接读到两条硬证据：
+
+```
+Model\network.c:29  --load-mdesc-file = "STEdgeAI/2.0/Utilities/configs/stm32n6"
+Model\network.c:51  #if LL_ATON_VERSION_MAJOR != 1 || ... _DEV != 16
+```
+
+即：这版 `network.c` 是 **STEdgeAI 2.0** 生成的，且要求 **ll_aton 1.0.0-dev16**。
+换任何别的版本（包括 ST 官方仓库 README 里写的 4.0.0）都会报
+`Possible mismatch in ll_aton library used`。
+
+> 这个坑我踩过：先前文档按 ST 官方 GettingStarted 仓库的 "Tools Version: STEdgeAI 4.0.0" 写，
+> 那个仓库已经升级过；而本工程是正点原子 2025-01 的版本，配套的是 2.0。
+> **以包内 `network.c` 的这行注释为准，不要以任何 README 为准。**
+
+### 6.1.1 后处理中间件的真实路径
+
+计划里提到的 `Middlewares/ai-postprocessing-wrapper/README.md` **在软件包里不存在**。
+本包对应的目录是：
+
+```
+Middlewares\STM32_VISION_MODELS_PP\     ← 头文件 od_yolov8_pp_if.h 等都在这里
+```
+
+查后处理类型（`..._UF` / `..._UI`）时去这里翻，别去找那个不存在的路径。
 
 ### 6.2 Python 3.12 独立环境（✅ 已完成，2026-11-16）
 
@@ -260,7 +284,7 @@ $env:UV_CACHE_DIR = "D:\STM32N6\uv-cache"        # 缓存放 D:，别占 C:
 | STM32CubeProgrammer | 2.18.0 | `D:\ST\STM32CubeProgrammer` |
 | STM32CubeMX（内置） | 6.13.0 | 随 CubeIDE |
 | STM32Cube FW N6 | V1.0.0 | `D:\STM32N6\SoftwarePackage\STM32Cube_FW_N6_V1.0.0` |
-| ST Edge AI Core | 4.0.0（待装） | `D:\ST\STEdgeAI\4.0` |
+| ST Edge AI Core | 2.0.0（待装） | `D:\ST\STEdgeAI\2.0` |
 | Python | **3.12.16（✅ 已装）** | `D:\STM32N6\py\yolo312` |
 | uv | 0.13.8（✅ 已装） | `%APPDATA%\Python\Python314\Scripts\uv.exe` |
 | 外部 Flash 型号 | **待确认** | — |
