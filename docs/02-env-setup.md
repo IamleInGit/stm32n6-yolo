@@ -209,9 +209,27 @@ STM32_Programmer_CLI -c port=SWD mode=HOTPLUG
 
 ### 6.1 ST Edge AI Core **2.0.0**（不是 4.0）
 
-- 下载页：<https://www.st.com/en/development-tools/stedgeai-core.html>
-- 默认路径：`D:\ST\STEdgeAI\2.0`
+- 下载页：<https://www.st.com/en/development-tools/stedgeai-core.html#get-software>
+- 默认路径：`D:\ST\STEdgeAI` → 安装器自己建 `2.0` 子目录
 - 可执行文件：`D:\ST\STEdgeAI\2.0\Utilities\windows\stedgeai.exe`
+
+**⚠️ 要下两个包，不是一���**（正点原子文档明确要求）：
+
+| 包 | 用途 |
+| :--- | :--- |
+| **STEdgeAI-Core** 安装包 | 主程序 |
+| **ST Neural-ART 软件包** | 安装向导会问「选择 ST Neural-ART 软件包的路径」，没有它 N6 的 NPU 后端不可用 |
+
+两个都在同一个下载页（`#get-software` 锚点）上。
+
+**验证**（正点原子文档给出的期望输出）：
+
+```
+> stedgeai --version
+ST Edge AI Core v2.0.0-20049   ISPU 1.1.0   MLC 1.1.0   StellarStudioAI 2.0.0   STM32CubeAI 10.0.0
+```
+
+看到 `v2.0.0-xxxxx` 和 `STM32CubeAI 10.0.0` 就对了——这两个数字正好对应包内 `network.c` 要求的版本。
 
 **版本为什么必须是 2.0** —— 从包内文件里直接读到两条硬证据：
 
