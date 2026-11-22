@@ -280,8 +280,8 @@ $env:UV_CACHE_DIR = "D:\STM32N6\uv-cache"        # 缓存放 D:，别占 C:
 
 | 组件 | 版本 | 路径 |
 | :--- | :--- | :--- |
-| STM32CubeIDE | 1.17.0 | `D:\ST\STM32CubeIDE_1.17.0` |
-| STM32CubeProgrammer | 2.18.0 | `D:\ST\STM32CubeProgrammer` |
+| STM32CubeIDE | **1.17.0（✅ 已装）** | `D:\ST\STM32CubeIDE_1.17.0` |
+| STM32CubeProgrammer | **2.22.0（✅ 已装）** | `D:\ST\STM32CubeProgrammer` |
 | STM32CubeMX（内置） | 6.13.0 | 随 CubeIDE |
 | STM32Cube FW N6 | V1.0.0 | `D:\STM32N6\SoftwarePackage\STM32Cube_FW_N6_V1.0.0` |
 | ST Edge AI Core | 2.0.0（待装） | `D:\ST\STEdgeAI\2.0` |

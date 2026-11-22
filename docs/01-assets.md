@@ -184,8 +184,8 @@ IMX335 ──► DCMIPP PIPE1 ──► LTDC L0（实时画面，800×480）
 | Node.js | ✅ v24.18.0 | 本项目不需要 |
 | CMake | ❌ | CubeIDE 路线不需要；只有走 Makefile 才要 |
 | arm-none-eabi-gcc | ❌ | CubeIDE 自带，不用单独装 |
-| STM32CubeIDE | ❌ | **阶段 0a 第一优先级** |
-| STM32CubeProgrammer | ❌ | **阶段 0a 第一优先级**（含 ST-LINK 驱动） |
+| STM32CubeIDE | ✅ **1.17.0**（装于 `D:\ST`） | 2026-11-22 装好，`352_IMX335` 编译 0 error |
+| STM32CubeProgrammer | ✅ **2.22.0**（装于 `D:\ST`） | ≥2.21，签名要加 `--align` |
 | ST Edge AI Core | ❌ | 阶段 3 才需要，可延后 |
 | ST-LINK Utility | ✅ 已装（x86） | 老工具，**不支持 N6，别用** |
 
