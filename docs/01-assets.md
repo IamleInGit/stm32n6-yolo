@@ -14,10 +14,10 @@
 | 开发板 | ✅ 已有 | 正点原子 **ATK-CNN647B** |
 | MCU | ✅ | **STM32N647X0HxQ**，Cortex-M55 + Neural-ART NPU |
 | 片内 Flash | ⚠️ **没有** | N6 系列无片内 Flash，代码必须放外部 NOR 或加载进 RAM |
-| 外部 NOR Flash | ❓ 待确认 | 三选一，见 §5，**选错就起不来** |
+| 外部 NOR Flash | ✅ **BY25FQ128EL（16 MB）** | 2026-11-22 实测：读 `0x70000000` 得 `0x324D5453`（`STM2` 头），另外两个 loader 读不到 |
 | IMX335 摄像头 | ✅ **已到货**（2026-11-22） | 包内两套驱动都已就绪，见 §4 |
-| 800×480 RGB LCD | ❓ 待确认 | LTDC 双层：L0 视频层 + L1 叠加层（框/字画在 L1） |
-| 调试器 | ❓ 待确认 | 板载还是外置 ST-LINK，决定驱动安装方式 |
+| 800×480 RGB LCD | ✅ 已接 | LTDC 双层：L0 视频层 + L1 叠加层（框/字画在 L1） |
+| 调试器 | ⚠️ 板载 ST-LINK（**兼容芯片**） | FW `V2J35S7`，升级工具读不出固件、Upgrade 灰显；**CubeIDE 的 GDB server 拒绝启动**，改用 CubeProgrammer CLI 烧 Flash |
 | HyperRAM | ✅ 板上 | 映射在 `0x91000000`，16 MB，可当大 buffer 用 |
 
 链接脚本实测值（`STM32N647X0HXQ_LRUN_RAMxspi1.ld`）：
