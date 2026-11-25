@@ -206,8 +206,48 @@ YOLOv8 对应 `AI_OBJDETECT_YOLOV8_PP_NB_CLASSES`。
 
 ## 6 待验证项（等硬件到位后逐条打勾）
 
-- [ ] `appli.hex` 未签名能否被 FSBL 接受并启动
-- [ ] 三个 `.stldr` 中哪个与板上 Flash 匹配
-- [ ] 实际帧率与单帧 NPU 耗时
+- [x] `appli.hex` 未签名能否被 FSBL 接受并启动 —— ✅ 能，未签名直接跑
+- [x] 三个 `.stldr` 中哪个与板上 Flash 匹配 —— ✅ `BY25FQ128EL`（16 MB）
+- [ ] 实际帧率与单帧 NPU 耗时 —— 初步 4.29 FPS / 225 ms，偏慢待查
 - [ ] HyperRAM 真实基址与容量（§2.1 的不一致）
 - [ ] `max_onchip_sram_size=1024KB` 与实际使用 1.75 MB 的关系（mpool 里有这个参数，但实际池是 1.75 MB）
+
+---
+
+## 7 实测踩到的操作坑（2026-11-25）
+
+### 7.1 读写外部 Flash 前，板子必须停在 Development boot
+
+**现象**：CubeProgrammer 报 `Unable to get core ID` 或 `failed to read the requested memory content`，
+但 ST-LINK 明明能认到（电压也正常）。
+
+**原因**：板子从 Flash 启动后，app 把 XSPI 配成了 memory-mapped 模式。
+外部加载器（`.stldr`）初始化时也要接管 XSPI，两者打架 → 加载器起不来。
+
+**解决**：把 P6 跳线拨到 **Development boot（B1 → 3V3）**，断电重上电，
+让 app 不运行、XSPI 保持空闲，再做读/写。
+
+> 同一个现象还有一个变体：`No debug probe detected` —— 那是 USB 线没插好/没上电，
+> 跟这一条不是同一回事，先查线再查跳线。
+
+### 7.2 整片备份可用 `-u`，但必须满足两条
+
+```powershell
+STM32_Programmer_CLI -c port=SWD mode=UR -el <loader>.stldr `
+    -u 0x70000000 0x1000000 D:\STM32N6\backup\atk-factory-16MB.bin
+```
+
+- 必须 `mode=UR`（复位下连接），`mode=HOTPLUG` 在 app 运行时抓不到核
+- 必须停在 Development boot（见 7.1）
+
+16 MB 读完约 **109 秒**。读回来的文件头 4 字节应是 `53 54 4D 32`（`STM2`），可据此判断备份有效。
+
+### 7.3 烧录耗时参考（BY25FQ128EL，16 MB 片）
+
+| 文件 | 大小 | 耗时 |
+| :--- | :--- | ---: |
+| `fsbl-*.hex` | 28 KB | 0.8 s |
+| `network-data.hex` | 30 MB（10.6 MB 有效） | **79 s** |
+| `appli.hex` | 505 KB | 2.8 s |
+
+换模型时只需重烧 `network-data.hex` + `appli.hex`，FSBL 一次就够。

@@ -7,6 +7,16 @@
 **P1 达成（2026-11-22）**：屏上实时出现人体检测框——摄像头、LCD、NPU、后处理、权重加载全部打通。
 （跑的是出厂固件，模型为 1 类 `person` 检测；**不是** YOLOv8n，也还不是我们自己训的模型。）
 
+**烧录链路闭环（2026-11-25）**：用 CubeProgrammer 把 991 的三条 hex 写进外部 Flash，
+切回 Flash boot 后正常启动，屏上显示 `Inference 225 ms / FPS 4.29 / Persons 3`。
+**这是第一次跑"我们自己烧进去的固件"**，端到端工具链验证完毕。
+
+> 出厂固件已整片备份：`D:\STM32N6\backup\atk-factory-16MB.bin`
+> SHA256 `1242B6AA15B6AF1A5BAD4DA7AEF2462F8DDDC66BFE8E4CF4015C4D83684AE8A2`
+
+> ⚠️ **待查的性能疑点**：`Inference 225 ms / FPS 4.29` 对 224 输入的 TinyYOLOv2 来说偏慢。
+> 首发怀疑是时钟没跑满，或瓶颈在 DCMIPP→LTDC 而非 NPU。留到阶段 5 第一个查。
+
 2026-11-22 外部条件全部落地：
 
 | 原阻塞项 | 现状 |
