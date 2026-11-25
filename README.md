@@ -30,7 +30,7 @@
 | 5. 优化 | 分辨率、算子替换、双缓冲 | 🚧 后处理已优化 44×，板端待测 |
 
 拆解与验收标准见 [docs/00-roadmap.md](docs/00-roadmap.md)，当前进展与交接见 [docs/08-handoff.md](docs/08-handoff.md)，
-时间排期见 [docs/06-plan.md](docs/06-plan.md)。
+时间排期见 [docs/10-plan.md](docs/10-plan.md)。
 
 ### 目录
 
@@ -46,21 +46,20 @@ assets/     图片、波形、实测截图
 
 ### 环境
 
-工具版本矩阵与安装顺序见 [docs/02-environment.md](docs/02-environment.md)，
-路径约定与逐步验收命令见 [docs/02-env-setup.md](docs/02-env-setup.md)。
+路径约定、版本矩阵与逐步验收命令见 [docs/02-env-setup.md](docs/02-env-setup.md)。
 
 | 组件 | 版本 |
 | :--- | :--- |
 | 开发板 | 正点原子 ATK-CNN647B（STM32N647X0HxQ） |
 | 摄像头 | IMX335（已到货） |
-| STM32CubeIDE | 1.17.0（待装，装到 `D:\ST`） |
-| STM32CubeProgrammer | 2.18.0+（待装） |
-| ST Edge AI Core | 2.0.0（待装） |
+| STM32CubeIDE | 1.17.0（已装 `D:\ST`） |
+| STM32CubeProgrammer | 2.22.0（已装 `D:\ST`） |
+| ST Edge AI Core | 待装（官网只剩 4.x，见 [踩坑记录](docs/09-pitfalls.md)） |
 | Python | 3.12.16（uv，已装于 `D:\STM32N6\py\yolo312`） |
 
 ### 文档
 
-**计划与笔记**：[路线图](docs/00-roadmap.md) · [硬件与接线](docs/01-hardware.md) · [环境搭建](docs/02-environment.md) · [烧录与 BOOT](docs/03-flashing.md) · [模型转换](docs/04-model-pipeline.md) · [踩坑记录](docs/05-pitfalls.md) · [三周排期](docs/06-plan.md)
+**路线与记录**：[路线图](docs/00-roadmap.md) · [三周排期](docs/10-plan.md) · [踩坑记录](docs/09-pitfalls.md) · [交接摘要](docs/08-handoff.md)
 
 **深度记录**（实测数据与逐项验证）：[资产盘点](docs/01-assets.md) · [环境细节](docs/02-env-setup.md) · [Flash/SRAM 地图](docs/03-n6-deploy-notes.md) · [基线](docs/04-baseline-pipeline.md) · [量化](docs/05-quantization.md) · [固件解码](docs/06-firmware-decode.md) · [部署手册](docs/07-deployment-runbook.md) · [交接](docs/08-handoff.md)
 
@@ -103,4 +102,4 @@ assets/     images, waveforms, measurements
 
 ### Docs
 
-[Roadmap](docs/00-roadmap.md) · [Hardware](docs/01-hardware.md) · [Environment](docs/02-environment.md) · [Flashing & boot](docs/03-flashing.md) · [Model pipeline](docs/04-model-pipeline.md) · [Pitfalls](docs/05-pitfalls.md) · [3-week plan](docs/06-plan.md)
+[Roadmap](docs/00-roadmap.md) · [Plan](docs/10-plan.md) · [Pitfalls](docs/09-pitfalls.md) · [Handoff](docs/08-handoff.md)

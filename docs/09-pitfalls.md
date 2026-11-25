@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-11-25 ST Edge AI Core 2.0 已下架，官网只给最新版
+
+**现象**：下载页的版本下拉里选不到 2.0，只有 4.x 及以后。
+
+**背景**：包内 `network.c` 由 2.0.0 生成（见 [02-env-setup.md](02-env-setup.md) §6.1），
+换版本生成会报 `Possible mismatch in ll_aton library`。
+
+**三条路**（按优先级）：
+
+1. 先在正点原子资料包里找 2.0 安装包——他们的教程就是基于 2.0，最可能打包
+2. 装 4.x，再按 ST 官方 FAQ「How to update my project with a new version of ST Edge AI Core」
+   升级工程内的 AI 运行时（`ll_aton`、`stai_network.*`）
+3. 用 4.x 直接生成一次，看差异是否只在版本注释
+
+**结论**：待定。先走 1，不通再走 2。
+
+---
+
 ## 2026-11-17 ST 官网下载无限循环
 
 **现象**：登录后点下载又跳回登录页；改用 "Download as a guest" 同样循环。家庭网络与公司网络均复现。
