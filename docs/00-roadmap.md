@@ -2,8 +2,8 @@
 
 每个阶段都要有**可验收的产出**，否则很容易变成"看了很多资料但什么都没跑起来"。
 
-> **当前进度（2026-11-16）**：阶段 1、2 完成；阶段 3 的模型侧与后处理侧完成，卡在 STEdgeAI；
-> 阶段 0 的 PC 侧就绪，卡在 ST 工具安装与硬件。
+> **当前进度（2026-11-27）**：阶段 0（0a/0b/0c）、1、2 完成；阶段 3 的模型侧与后处理侧完成，
+> 只剩 STEdgeAI 生成 `network.c` 这一环。
 > 详细交接见 [`08-handoff.md`](08-handoff.md)。
 
 ## 阶段 0 · 环境
@@ -12,26 +12,26 @@
 拆成三小步，每步都有可验收的东西，避免"装了一堆工具但什么都没跑起来"。
 盘点见 [01-assets.md](01-assets.md)，安装步骤见 [02-env-setup.md](02-env-setup.md)。
 
-**0a · 工具链**（不用等摄像头）
+**0a · 工具链** ✅ 2026-11-22
 
-- [ ] 装 STM32CubeIDE 1.17.0 + STM32CubeProgrammer 2.18+
-- [ ] 把 ATK 的 `.stldr` 外部 Flash 加载器拷进 CubeProgrammer
-- [ ] `352_IMX335` **原地**编译 0 error（例程不能拷出来单独建工程）
-- [ ] 记录：工具版本、烧录命令、驱动踩坑
+- [x] 装 STM32CubeIDE 1.17.0 + STM32CubeProgrammer 2.18+
+- [x] 把 ATK 的 `.stldr` 外部 Flash 加载器拷进 CubeProgrammer
+- [x] `352_IMX335` **原地**编译 0 error（例程不能拷出来单独建工程）
+- [x] 记录：工具版本、烧录命令、驱动踩坑
 
 **验收**：CubeIDE 构建通过，`-c port=SWD mode=HOTPLUG` 能连上板子。
 
-**0b · 硬件自检**（等 IMX335 到货）
+**0b · 硬件自检** ✅ 2026-11-22
 
-- [ ] 烧 `352_IMX335`，确认摄像头 → 屏 通路
-- [ ] 确认外部 Flash 型号（BY25FQ128EL / DUAL / MX25UM25645G 三选一，选错起不来）
+- [x] 烧 `352_IMX335`，确认摄像头 → 屏 通路
+- [x] 确认外部 Flash 型号（BY25FQ128EL / DUAL / MX25UM25645G 三选一，选错起不来）
 
 **验收**：屏上出连续画面，无撕裂。
 
-**0c · AI 通路**
+**0c · AI 通路** ✅ 2026-11-27
 
-- [ ] 烧 `991_AI_People_Detection` 的预编译产物（fsbl + network-data + appli）
-- [ ] 屏上出现人体检测框
+- [x] 烧 `991_AI_People_Detection` 的预编译产物（fsbl + network-data + appli）
+- [x] 屏上出现人体检测框
 
 **验收**：框随人移动。此步过后 NPU、权重加载、后处理、显示四者全通，后面不必再怀疑硬件。
 
