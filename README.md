@@ -59,7 +59,7 @@ assets/     图片、波形、实测截图
 
 ### 文档
 
-**路线与记录**：[路线图](docs/00-roadmap.md) · [三周排期](docs/10-plan.md) · [踩坑记录](docs/09-pitfalls.md) · [交接摘要](docs/08-handoff.md)
+**路线与记录**：[路线图](docs/00-roadmap.md) · [三周排期](docs/10-plan.md) · [术语入门](docs/11-concepts.md) · [踩坑记录](docs/09-pitfalls.md) · [交接摘要](docs/08-handoff.md)
 
 **深度记录**（实测数据与逐项验证）：[资产盘点](docs/01-assets.md) · [环境细节](docs/02-env-setup.md) · [Flash/SRAM 地图](docs/03-n6-deploy-notes.md) · [基线](docs/04-baseline-pipeline.md) · [量化](docs/05-quantization.md) · [固件解码](docs/06-firmware-decode.md) · [部署手册](docs/07-deployment-runbook.md) · [交接](docs/08-handoff.md)
 
