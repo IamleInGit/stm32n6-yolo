@@ -27,7 +27,7 @@
 3. ST Edge AI 必须是 **2.0**（`network.c` 第 29 行写着 `STEdgeAI/2.0`），不是 4.0
 4. 计划里提到的 `Middlewares/ai-postprocessing-wrapper/` 在包内不存在，实际是 `STM32_VISION_MODELS_PP`
 
-**下一步唯一的硬阻塞**：`ST Edge AI Core 2.0` 的下载。
+**原阻塞已解除**：2.0 被登录墙卡死后改走 **ST Edge AI 4.1 + 升级 ll_aton**，P2 已跑通（96 ms / 10 FPS）。
 
 
 ---

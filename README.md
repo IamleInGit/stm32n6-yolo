@@ -22,11 +22,11 @@
 
 | 阶段 | 内容 | 状态 |
 | :--- | :--- | :--- |
-| 0. 环境 | 开发板、工具链、ST Edge AI 跑通 | ✅ 工具链与烧录链路全通（991 三条 hex 已烧录验证）；ST Edge AI 待装 |
+| 0. 环境 | 开发板、工具链、ST Edge AI 跑通 | ✅ 全部打通（CubeIDE 1.17 / CubeProgrammer 2.22 / ST Edge AI 4.1） |
 | 1. 基线 | PC 上跑通 YOLO 推理，固定数据集与指标 | ✅ mAP50 0.575 |
 | 2. 量化 | INT8 量化，量出精度损失 | ✅ 3.34 MB，mAP50 0.547 |
-| 3. 部署 | 模型转换、烧录，在板子上跑出第一帧结果 | 🚧 模型与后处理侧完成，待 STEdgeAI |
-| 4. 实测 | 帧率、内存占用、功耗 | ⬜ 待硬件 |
+| 3. 部署 | 模型转换、烧录，在板子上跑出第一帧结果 | ✅ **自训 YOLOv8n 上板：96 ms / 10 FPS** |
+| 4. 实测 | 帧率、内存占用、功耗 | 🚧 已有帧率/耗时/CPU 占用；内存与功耗待系统测 |
 | 5. 优化 | 分辨率、算子替换、双缓冲 | 🚧 后处理已优化 44×，板端待测 |
 
 拆解与验收标准见 [docs/00-roadmap.md](docs/00-roadmap.md)，当前进展与交接见 [docs/08-handoff.md](docs/08-handoff.md)，
@@ -54,7 +54,7 @@ assets/     图片、波形、实测截图
 | 摄像头 | IMX335（已到货） |
 | STM32CubeIDE | 1.17.0（已装 `D:\ST`） |
 | STM32CubeProgrammer | 2.22.0（已装 `D:\ST`） |
-| ST Edge AI Core | 待装（官网只剩 4.x，见 [踩坑记录](docs/09-pitfalls.md)） |
+| ST Edge AI Core | 4.1.0（已装于 `D:\ST\STEdgeAI\4.1`） |
 | Python | 3.12.16（uv，已装于 `D:\STM32N6\py\yolo312`） |
 
 ### 文档

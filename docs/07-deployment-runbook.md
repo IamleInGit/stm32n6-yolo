@@ -85,7 +85,8 @@ BOOT 拨到 **Boot from Flash** → 上电 → 人站到镜头前。
 
 ## 3 阶段 4：换成自己的模型
 
-现在有个**必须先回答的问题**：ST 的 `od_yolov8_pp_if.h` 吃原始头还是已解码输出？
+> ✅ **这个问题已有答案（2026-11-28）**：ST 的 YOLOv8 PP 需要三个原始头，且包里缺 `AI_OBJDETECT_YOLOV8_PP_*` 宏。
+> 实际走的是**自研后处理**（见 §8），本节的 A/B 路线只作为历史记录保留。
 
 - 打开 `Middlewares\STM32_VISION_MODELS_PP\od_yolov8_pp_if.h` 和 `app_postprocess.c`，
   看它读取的输出张量形状——**这一步会直接决定走 A 还是 B**。

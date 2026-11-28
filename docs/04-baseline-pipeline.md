@@ -105,13 +105,13 @@ Recall 只有 0.514 是数据太少的直接后果（模型没见过足够多姿
 
 ---
 
-## 5 与板端的落差：现在还剩两条
+## 5 与板端的落差（**已全部有结论，见 5.1 文末与 5.2**）
 
-### 5.1 布局 NCHW → NHWC（**结论待验证**）
+### 5.1 布局：原来是 NCHW，不是 NHWC
 
 现状：ONNX 是 `[1, 3, H, W]` NCHW float32；板上现成模型是 `[1, 224, 224, 3]` NHWC uint8。
 
-但**谁来转**这一点，我目前没有 STEdgeAI，无法确认，两种可能：
+当时**谁来转**这一点没有定论，猜了两种可能（**两个都猜错了，见文末实测结论**）：
 
 | 可能 | 判据 |
 | :--- | :--- |
@@ -120,6 +120,16 @@ Recall 只有 0.514 是数据太少的直接后果（模型没见过足够多姿
 
 **不要现在就去手改 ONNX 加 Transpose**——很可能多余，还会让量化校准失效。
 等 STEdgeAI 到位，看 report 的 layout 字段再决定。
+
+> **实测结论（2026-11-28）**：上面 A/B 两个判断都不对。
+>
+> STEdgeAI 4.1 生成的模型，`network_c_info.json` 里输入 buffer 是
+> **`shape=[1,3,224,224]` + `channel_first: true`（NCHW）**；
+> 而 `network_generate_report.txt` 的 `oshape` 却写成 `[b:1,h:224,w:224,c:3]`（NHWC 风格）——
+> **两者矛盾时，以 `network_c_info.json` 的 `channel_first` 为准。**
+>
+> 所以真正要做的不是"等工具转置"，而是：**应用侧把 DCMIPP 的交错 RGB 转成平面 RRR…GGG…BBB**。
+> 实测代价约 14 ms/帧（82 → 96 ms）。DCMIPP 没有平面 RGB 输出格式，只能在软件里转。
 
 ### 5.2 输入 dtype：float32 → uint8
 

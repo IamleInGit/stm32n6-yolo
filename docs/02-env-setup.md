@@ -302,7 +302,7 @@ $env:UV_CACHE_DIR = "D:\STM32N6\uv-cache"        # 缓存放 D:，别占 C:
 | STM32CubeProgrammer | **2.22.0（✅ 已装）** | `D:\ST\STM32CubeProgrammer` |
 | STM32CubeMX（内置） | 6.13.0 | 随 CubeIDE |
 | STM32Cube FW N6 | V1.0.0 | `D:\STM32N6\SoftwarePackage\STM32Cube_FW_N6_V1.0.0` |
-| ST Edge AI Core | 2.0.0（待装） | `D:\ST\STEdgeAI\2.0` |
+| ST Edge AI Core | **4.1.0（✅ 已装，STM32CubeAI 12.1.0）** | `D:\ST\STEdgeAI\4.1` |
 | Python | **3.12.16（✅ 已装）** | `D:\STM32N6\py\yolo312` |
 | uv | 0.13.8（✅ 已装） | `%APPDATA%\Python\Python314\Scripts\uv.exe` |
 | 外部 Flash 型号 | **待确认** | — |
