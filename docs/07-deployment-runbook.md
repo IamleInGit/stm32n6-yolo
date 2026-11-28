@@ -221,3 +221,74 @@ int n = yolo_v8_postprocess(box_logits, cls_logits, 224, 1,
 
 > **动手前先备份 `991_AI_People_Detection` 整个目录**。
 > 软件包可以重新下载，但正点原子那份包不一定还拿得到同一个版本。
+
+---
+
+## 8 4.1 路线实际执行记录（2026-11-28）
+
+STEdgeAI 2.0 的下载被登录墙卡死后，改走 4.1 + 升级 runtime。以下是实际踩到的点，按遇到顺序。
+
+### 8.1 生成命令（与 2.0 的差别）
+
+```powershell
+stedgeai generate --no-inputs-allocation --no-outputs-allocation `
+    --model best_int8_signed.onnx --target stm32n6 `
+    --st-neural-art default@user_neuralart.json `
+    --input-data-type uint8 --output-data-type float32
+```
+
+两个新增参数很关键：`--input-data-type uint8` 让输入直接对齐 DCMIPP 的 RGB888。
+
+### 8.2 量化必须用有符号 int8
+
+```
+NOT IMPLEMENTED: Onnx exporting model with quantized unsigned integer format is not supported
+```
+
+ST 的转换器**只接受 int8（有符号）**的量化 ONNX。用 `QUInt8` 激活会被拒。
+重新用 `QInt8` 量化后精度反而略好（mAP50 0.551 vs 0.547）。
+
+### 8.3 runtime 升级不是"覆盖一个文件夹"
+
+| 改动 | 说明 |
+| :--- | :--- |
+| `Middlewares\AI\Npu\ll_aton\` | 用 4.1 的覆盖（`v1.0.0-rc0-16` → `v1.1.5-11`） |
+| `Middlewares\AI\Npu\Devices\STM32N6XX\` | **也要覆盖**，新版 `ll_aton_platform.h` 依赖新的 `ATON.h` |
+| `NetworkRuntime1000_CM55_GCC.a` | 用 `NetworkRuntime1210_CM55_GCC.a` 覆盖，**保持文件名不变**，工程无需改 |
+
+### 8.4 三处 API 不兼容
+
+| 现象 | 修法 |
+| :--- | :--- |
+| `LL_ATON_*_Default` 找不到 | 生成时默认名是 `network`，把 `app.c` 里 6 处 `_Default` 改成 `_network`（`--name Default` 生成的是小写 `_default`，仍不匹配） |
+| `npu_cache_init` undefined | 新版改成 `npu_cache_enable_clocks_and_reset()` |
+| `HAL_CACHEAXI_MspInit` 重复定义 | 把 `npu_cache.c` 里那两个函数改成 `__attribute__((weak))` |
+
+### 8.5 ★ 两个布局陷阱（最花时间的地方）
+
+从 `st_ai_output\network_c_info.json` 的 `buffers` 里读出的权威布局：
+
+| buffer | 形状 | 布局 | 影响 |
+| :--- | :--- | :--- | :--- |
+| 输入 `Input_2_out_0` | `[1,3,224,224]` | **channel_first** | 必须把 DCMIPP 的**交错 RGB** 转成**平面 RRR…GGG…BBB** 再喂 |
+| 输出 `Concat_815_out_0` | `[1,5,1029]` | **channel_first** | `raw[c*1029 + i]`，不是 `raw[i*5 + c]` |
+
+**报错现象很有迷惑性**：
+
+- 输入不转：模型看到噪声，满屏假框，但框的位置"看着合理"
+- 输出索引错：读到的"置信度"是坐标值，框上显示 **38.70、218.43** 这种大于 1 的数
+
+> **教训**：报告里的 `oshape` 写的是 `[b:1,h:224,w:224,c:3]`（NHWC 风格），
+> 但运行时真正用的是 `network_c_info.json` 里的 `channel_first` 字段。
+> **以 c_info.json 为准，不要信 report 的 oshape。**
+
+### 8.6 实测结果
+
+```
+Inference  96 ms      （YOLOv8n 224 int8，含 150 KB 输入转置）
+FPS        10.00
+Peoples    0~5（视场景）
+置信度      0.64~0.77
+```
+
+对比出厂 demo（TinyYOLOv2）：**225 ms → 96 ms**，快 2.3 倍，且模型换成了 YOLOv8n。
